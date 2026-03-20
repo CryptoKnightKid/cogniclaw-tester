@@ -37,6 +37,13 @@ cd cogniclaw/hosted-control-plane && npm run dev
 This package is currently optimized to test:
 - `cogniclaw/hosted-control-plane`
 
+## CogniClaw onboarding over existing OpenClaw
+```bash
+cd cogniclaw
+chmod +x onboard.sh install.sh
+./onboard.sh
+```
+
 ## Common issues
 - Missing Node/npm: run installer again
 - Placeholder `.env` values: replace before external integrations

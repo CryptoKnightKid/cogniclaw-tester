@@ -5,8 +5,18 @@
 
 set -e
 
-VERSION="2.0.0"
+VERSION="2.0.1"
 MIN_OPENCLAW_YEAR=2026
+
+# Force interactive prompt IO when launched from wrappers/pipes/non-tty shells.
+if [ ! -t 0 ] && [ -e /dev/tty ]; then
+  exec < /dev/tty
+fi
+
+INTERACTIVE_TTY=0
+if [ -t 0 ]; then
+  INTERACTIVE_TTY=1
+fi
 
 # Colors
 GREEN='\033[0;32m'
@@ -120,6 +130,17 @@ echo "   Workspace: $WORKSPACE"
 NODE_BIN=$(resolve_node || echo "node")
 
 divider
+
+if [ "$INTERACTIVE_TTY" -eq 1 ]; then
+  echo -e "${GREEN}✔ Interactive terminal detected${NC}"
+  echo "This is the CogniClaw CLI onboarding wizard."
+  echo "You'll be asked a series of setup questions for model auth, personality, memory, automation, dashboard, and channels."
+  echo ""
+  read -p "Press Enter to begin onboarding..." _cogniclaw_begin
+else
+  echo -e "${YELLOW}⚠ No interactive TTY detected.${NC}"
+  echo "Prompts may be skipped in non-interactive shells. Re-run directly in a terminal with: ./install.sh"
+fi
 
 # ============================================
 # STEP 1: Model Authentication

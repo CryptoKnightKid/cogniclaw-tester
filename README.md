@@ -14,6 +14,13 @@ chmod +x start.sh
 ./start.sh
 ```
 
+### CogniClaw onboarding over an existing OpenClaw install
+```bash
+cd cogniclaw
+chmod +x onboard.sh install.sh
+./onboard.sh
+```
+
 ### Windows
 ```powershell
 git clone https://github.com/CryptoKnightKid/cogniclaw-tester.git
