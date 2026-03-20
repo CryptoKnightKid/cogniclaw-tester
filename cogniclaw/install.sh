@@ -47,6 +47,57 @@ resolve_node() {
   fi
 }
 
+npm_global_bin() {
+  npm prefix -g 2>/dev/null | awk '{print $0 "/bin"}'
+}
+
+ensure_npm_global_path() {
+  local npm_bin=""
+  npm_bin=$(npm_global_bin 2>/dev/null || true)
+  if [ -n "$npm_bin" ] && [ -d "$npm_bin" ]; then
+    case ":$PATH:" in
+      *":$npm_bin:"*) ;;
+      *) export PATH="$npm_bin:$PATH" ;;
+    esac
+  fi
+  hash -r 2>/dev/null || true
+}
+
+node_major_version() {
+  local node_bin
+  node_bin=$(resolve_node) || return 1
+  "$node_bin" -v | sed 's/^v//' | cut -d. -f1
+}
+
+ensure_modern_node() {
+  local major=""
+  major=$(node_major_version 2>/dev/null || echo 0)
+  if [ "$major" -ge 20 ]; then
+    return 0
+  fi
+
+  echo -e "${YELLOW}   Node.js >=20 required. Detected: v${major}${NC}"
+  echo -e "${BLUE}   Attempting to install Node.js 22 LTS...${NC}"
+
+  if command -v apt-get >/dev/null 2>&1; then
+    local APT_PREFIX=""
+    if [ "$EUID" -ne 0 ] && command -v sudo >/dev/null 2>&1; then
+      APT_PREFIX="sudo"
+    fi
+    curl -fsSL https://deb.nodesource.com/setup_22.x | ${APT_PREFIX} -E bash - >/dev/null 2>&1 || true
+    ${APT_PREFIX} apt-get install -y nodejs >/dev/null 2>&1 || true
+  elif command -v brew >/dev/null 2>&1; then
+    brew install node >/dev/null 2>&1 || brew upgrade node >/dev/null 2>&1 || true
+  fi
+
+  hash -r 2>/dev/null || true
+  major=$(node_major_version 2>/dev/null || echo 0)
+  if [ "$major" -lt 20 ]; then
+    echo -e "${RED}   ✗ Failed to provision modern Node.js. Install Node 22 manually and rerun.${NC}"
+    exit 1
+  fi
+}
+
 echo ""
 echo -e "${BOLD}🧠 CogniClaw Installer v${VERSION}${NC}"
 echo "==============================="
@@ -63,6 +114,8 @@ echo -e "${BLUE}📦 Checking for OpenClaw...${NC}"
 OPENCLAW_BIN=""
 OPENCLAW_INSTALLED=0
 
+ensure_npm_global_path
+
 if command -v openclaw >/dev/null 2>&1; then
   OPENCLAW_BIN=$(command -v openclaw)
   OC_VERSION=$(openclaw --version 2>/dev/null | head -1 | grep -oP '\d{4}\.\d+\.\d+' || echo "unknown")
@@ -72,7 +125,7 @@ else
   echo "   ✗ OpenClaw not found."
   echo ""
 
-  # Check for Node.js first
+  # Check for Node.js first and enforce modern version
   if ! resolve_node >/dev/null 2>&1; then
     echo -e "${YELLOW}   Node.js is required. Installing...${NC}"
     if command -v apt-get >/dev/null 2>&1; then
@@ -94,18 +147,42 @@ else
     fi
   fi
 
+  ensure_modern_node
+  ensure_npm_global_path
+
   echo -e "${BLUE}   Installing OpenClaw runtime...${NC}"
-  npm install -g openclaw@latest 2>&1 | tail -3
-  
+  if npm install -g openclaw@latest 2>&1 | tail -3; then
+    :
+  else
+    echo -e "${RED}   ✗ OpenClaw installation command failed.${NC}"
+    echo "   Try manually: sudo npm install -g openclaw@latest"
+    exit 1
+  fi
+
+  ensure_npm_global_path
+
   if command -v openclaw >/dev/null 2>&1; then
     OPENCLAW_BIN=$(command -v openclaw)
     OC_VERSION=$(openclaw --version 2>/dev/null | head -1 | grep -oP '\d{4}\.\d+\.\d+' || echo "unknown")
     echo -e "   ${GREEN}✔ OpenClaw v${OC_VERSION} installed${NC}"
+    echo -e "   ${DIM}Using executable: ${OPENCLAW_BIN}${NC}"
     OPENCLAW_INSTALLED=1
   else
-    echo -e "${RED}   ✗ OpenClaw installation failed.${NC}"
-    echo "   Try manually: npm install -g openclaw@latest"
-    exit 1
+    NPM_BIN=$(npm_global_bin 2>/dev/null || true)
+    if [ -n "$NPM_BIN" ] && [ -x "$NPM_BIN/openclaw" ]; then
+      export PATH="$NPM_BIN:$PATH"
+      OPENCLAW_BIN="$NPM_BIN/openclaw"
+      OC_VERSION=$($OPENCLAW_BIN --version 2>/dev/null | head -1 | grep -oP '\d{4}\.\d+\.\d+' || echo "unknown")
+      echo -e "   ${GREEN}✔ OpenClaw v${OC_VERSION} installed${NC}"
+      echo -e "   ${DIM}Recovered from npm global path: ${OPENCLAW_BIN}${NC}"
+      OPENCLAW_INSTALLED=1
+    else
+      echo -e "${RED}   ✗ OpenClaw installation failed or is not on PATH.${NC}"
+      echo "   Try manually: sudo npm install -g openclaw@latest"
+      echo "   Then verify with: \
+   export PATH=\"\$(npm prefix -g)/bin:\$PATH\" && openclaw --version"
+      exit 1
+    fi
   fi
 fi
 
