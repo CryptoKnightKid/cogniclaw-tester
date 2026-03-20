@@ -1,0 +1,48 @@
+{
+  "family": "cogniclaw-control-plane",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::<ACCOUNT_ID>:role/cogniclawEcsExecutionRole",
+  "taskRoleArn": "arn:aws:iam::<ACCOUNT_ID>:role/cogniclawControlPlaneTaskRole",
+  "containerDefinitions": [
+    {
+      "name": "control-plane",
+      "image": "<ACCOUNT_ID>.dkr.ecr.<REGION>.amazonaws.com/cogniclaw-control-plane:latest",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 4000,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        { "name": "PORT", "value": "4000" },
+        { "name": "APP_ENV", "value": "production" },
+        { "name": "AWS_REGION", "value": "<REGION>" },
+        { "name": "S3_BUCKET", "value": "<BUCKET_NAME>" },
+        { "name": "ECS_CLUSTER", "value": "<CLUSTER_NAME>" },
+        { "name": "ECS_TASK_DEFINITION", "value": "<TENANT_RUNTIME_TASK_DEF>" },
+        { "name": "ECS_SUBNETS", "value": "subnet-1,subnet-2" },
+        { "name": "ECS_SECURITY_GROUPS", "value": "sg-1" },
+        { "name": "SECRETS_PREFIX", "value": "cogniclaw/tenants" }
+      ],
+      "secrets": [
+        { "name": "APP_JWT_SECRET", "valueFrom": "arn:aws:secretsmanager:<REGION>:<ACCOUNT_ID>:secret:cogniclaw/control-plane/jwt" },
+        { "name": "APP_ENCRYPTION_KEY", "valueFrom": "arn:aws:secretsmanager:<REGION>:<ACCOUNT_ID>:secret:cogniclaw/control-plane/encryption" },
+        { "name": "INTERNAL_API_KEY", "valueFrom": "arn:aws:secretsmanager:<REGION>:<ACCOUNT_ID>:secret:cogniclaw/control-plane/internal" },
+        { "name": "STRIPE_SECRET_KEY", "valueFrom": "arn:aws:secretsmanager:<REGION>:<ACCOUNT_ID>:secret:cogniclaw/control-plane/stripe" },
+        { "name": "STRIPE_WEBHOOK_SECRET", "valueFrom": "arn:aws:secretsmanager:<REGION>:<ACCOUNT_ID>:secret:cogniclaw/control-plane/stripe-webhook" }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/cogniclaw-control-plane",
+          "awslogs-region": "<REGION>",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ]
+}

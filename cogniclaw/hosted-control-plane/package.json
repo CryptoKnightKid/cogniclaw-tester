@@ -1,0 +1,30 @@
+{
+  "name": "cogniclaw-hosted-control-plane",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Hosted SaaS control plane for CogniClaw (Managed + BYOK)",
+  "main": "src/server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node --test --test-concurrency=1"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@aws-sdk/client-ecs": "^3.883.0",
+    "@aws-sdk/client-s3": "^3.883.0",
+    "@aws-sdk/client-secrets-manager": "^3.883.0",
+    "@aws-sdk/s3-request-presigner": "^3.883.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "stripe": "^18.4.0",
+    "zod": "^3.24.1"
+  }
+}

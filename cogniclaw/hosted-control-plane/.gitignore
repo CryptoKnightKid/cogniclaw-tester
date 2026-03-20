@@ -1,0 +1,5 @@
+node_modules/
+.env
+src/data/control-plane.json
+src/data/test-control-plane.json
+npm-debug.log*
