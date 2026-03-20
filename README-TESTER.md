@@ -4,21 +4,21 @@
 
 ### macOS / Linux
 ```bash
+chmod +x start.sh
+./start.sh
+```
+
+### Windows
+```powershell
+powershell -ExecutionPolicy Bypass -File .\start.ps1
+```
+
+### Manual fallback
+```bash
 chmod +x install.sh doctor.sh
 ./install.sh
 ./doctor.sh
 cd cogniclaw/hosted-control-plane && npm run dev
-```
-
-### Windows
-Right click `install.ps1` and run with PowerShell, or:
-```powershell
-powershell -ExecutionPolicy Bypass -File .\install.ps1
-```
-Then:
-```powershell
-cd .\cogniclaw\hosted-control-plane
-npm run dev
 ```
 
 ## What this package includes

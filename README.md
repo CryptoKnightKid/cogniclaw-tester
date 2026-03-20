@@ -10,19 +10,23 @@ CogniClaw is a cognitive layer for OpenClaw: memory, skills, automation, persona
 ```bash
 git clone https://github.com/CryptoKnightKid/cogniclaw-tester.git
 cd cogniclaw-tester
-chmod +x install.sh doctor.sh
-./install.sh
-./doctor.sh
-cd cogniclaw/hosted-control-plane && npm run dev
+chmod +x start.sh
+./start.sh
 ```
 
 ### Windows
 ```powershell
 git clone https://github.com/CryptoKnightKid/cogniclaw-tester.git
 cd cogniclaw-tester
-powershell -ExecutionPolicy Bypass -File .\install.ps1
-cd .\cogniclaw\hosted-control-plane
-npm run dev
+powershell -ExecutionPolicy Bypass -File .\start.ps1
+```
+
+### Manual flow (if needed)
+```bash
+chmod +x install.sh doctor.sh
+./install.sh
+./doctor.sh
+cd cogniclaw/hosted-control-plane && npm run dev
 ```
 
 ## What this repo is
